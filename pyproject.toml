@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "llm-structured-extract"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Typed, schema-enforced structured extraction over LLMs: validation, repair-and-retry, provider-agnostic, offline-testable."
 readme = "README.md"
 license = "MIT"
@@ -42,6 +42,10 @@ dev = [
 [project.urls]
 Repository = "https://github.com/Dcrr1717/llm-structured-extract"
 Issues = "https://github.com/Dcrr1717/llm-structured-extract/issues"
+
+[tool.hatch.version]
+# Single source of truth: bump __version__ there, then tag vX.Y.Z (see README, "Releasing").
+path = "src/llm_structured_extract/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/llm_structured_extract"]

@@ -373,6 +373,42 @@ How the tests stay offline but still meaningful:
 - Live tests exist but are opt-in, and CI never sets these variables:
   `ANTHROPIC_API_KEY=... LSE_RUN_LIVE_TESTS=1 pytest -m live`.
 
+### Releasing
+
+Pushing a version tag publishes to PyPI through
+[`release.yml`](.github/workflows/release.yml). It uses PyPI
+[trusted publishing](https://docs.pypi.org/trusted-publishers/) (OIDC), so no PyPI API
+token exists anywhere to leak.
+
+1. Bump `__version__` in `src/llm_structured_extract/__init__.py`, the only place the
+   version lives, and merge the change to `main`.
+2. Tag that commit on `main` and push the tag:
+
+   ```bash
+   git tag v0.2.0 && git push origin v0.2.0
+   ```
+
+The workflow then:
+
+- runs the full CI suite;
+- refuses tags that are not on `main` or that don't match `__version__`;
+- builds the sdist and wheel and checks them with `twine check --strict`;
+- smoke-tests the wheel in a clean environment;
+- publishes to PyPI, with PEP 740 attestations;
+- creates a GitHub release with the files attached. Tags such as `v0.2.0rc1` are marked
+  as pre-releases.
+
+Every action is pinned to a commit SHA, and Dependabot keeps those pins up to date.
+
+**One-time setup before the first release:**
+
+- **PyPI:** add a *pending* trusted publisher under Account settings → Publishing, with
+  project `llm-structured-extract`, owner `Dcrr1717`, repository `llm-structured-extract`,
+  workflow `release.yml` and environment `pypi`.
+- **GitHub:** create an environment named `pypi` under Settings → Environments. Optionally
+  restrict it to `v*` tags and add a required reviewer, so each publish waits for a manual
+  approval.
+
 ### Layout
 
 ```text
@@ -390,6 +426,7 @@ src/llm_structured_extract/
         anthropic.py  # AnthropicProvider
 examples/             # invoice, research abstract (+ streaming), custom provider
 tests/                # offline test suite (+ opt-in live tests)
+.github/workflows/    # ci.yml (tests on 3.10-3.13, mypy, ruff), release.yml (PyPI on tags)
 ```
 
 ## License
